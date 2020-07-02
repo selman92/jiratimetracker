@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Globalization;
+using System.Linq;
 using System.Net;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using RestSharp;
 using RestSharp.Authenticators;
 
@@ -12,6 +14,7 @@ namespace JiraTimeLogger.Jira
         private const string RestApiBaseUrl = "/rest/api/3/";
 
         private readonly string WorklogUrl = $"{RestApiBaseUrl}issue/{{0}}/worklog";
+        private readonly  string IssuesUrl = $"{RestApiBaseUrl}issue/picker";
         private readonly string _apiToken;
         private readonly Uri _baseUrl;
         private readonly string _email;
@@ -43,9 +46,7 @@ namespace JiraTimeLogger.Jira
 
         public bool AddTimeLog(string issueId, DateTime startTime, int elapsedSeconds, string comment = null)
         {
-            var restClient = new RestClient(_baseUrl);
-
-            restClient.Authenticator = new HttpBasicAuthenticator(_email, _apiToken);
+            var restClient = GetRestClient();
 
             var request = new RestRequest(new Uri(_baseUrl, string.Format(WorklogUrl, issueId)), Method.POST);
 
@@ -83,6 +84,32 @@ namespace JiraTimeLogger.Jira
             }
 
             return false;
+        }
+
+        public string[] GetIssues(string searchKeyword)
+        {
+            var restClient = GetRestClient();
+
+            var request = new RestRequest(new Uri(_baseUrl, IssuesUrl), Method.GET);
+
+            request.AddParameter("query", searchKeyword, ParameterType.QueryString);
+
+            var response = restClient.Execute(request);
+
+            var rawIssues = JObject.Parse(response.Content);
+
+            var issues = rawIssues["sections"][0]["issues"].ToArray().Select(issue =>
+                issue["key"].Value<string>() + " - " + issue["summary"].Value<string>()).ToArray();
+
+            return issues;
+        }
+
+        private IRestClient GetRestClient()
+        {
+            var restClient = new RestClient(_baseUrl);
+            restClient.Authenticator = new HttpBasicAuthenticator(_email, _apiToken);
+
+            return restClient;
         }
 
         private string AddComment(string serializedModel, string comment)

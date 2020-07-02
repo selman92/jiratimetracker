@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using JiraTimeLogger.Jira;
 using Newtonsoft.Json;
@@ -13,6 +14,7 @@ namespace JiraTimeLogger
     {
 
         private readonly Timer _trackingTimer;
+        private readonly Timer _issueTextChangeTimer;
         private int _elapsedSeconds = 0;
         private bool _isTrackingStarted = false;
         private DateTime _startTime;
@@ -26,11 +28,45 @@ namespace JiraTimeLogger
             _trackingTimer = new Timer {Interval = 1000};
             _trackingTimer.Tick += TrackingTimerOnTick;
 
+            _issueTextChangeTimer = new Timer {Interval = 1000};
+            _issueTextChangeTimer.Tick += IssueTextChangeTimerOnTick;
+
             LoadSettings();
 
             TxtApiToken.Validated += OnSettingsChange;
             TxtBaseUrl.Validated += OnSettingsChange;
             TxtEmail.Validated += OnSettingsChange;
+
+            TxtIssueId.TextChanged += TxtIssueIdOnTextChanged;
+        }
+
+        private async void IssueTextChangeTimerOnTick(object sender, EventArgs e)
+        {
+            var issue = TxtIssueId.Text;
+
+            if (!string.IsNullOrEmpty(issue))
+            {
+                var jiraClient = GetJiraClient();
+
+                var issues = await Task.Run(() => jiraClient.GetIssues(issue));
+                
+                _issueTextChangeTimer.Stop();
+            }
+        }
+
+        private void TxtIssueIdOnTextChanged(object sender, EventArgs e)
+        {
+            if (_issueTextChangeTimer.Enabled)
+            {
+                _issueTextChangeTimer.Stop();
+
+                _issueTextChangeTimer.Start();
+            }
+            else
+            {
+                _issueTextChangeTimer.Enabled = true;
+                _issueTextChangeTimer.Start();
+            }
         }
 
         private void TrackingTimerOnTick(object sender, EventArgs e)
@@ -113,7 +149,7 @@ namespace JiraTimeLogger
 
         private void BtnSubmit_Click(object sender, EventArgs e)
         {
-            var jiraClient = new JiraClient(new Uri(TxtBaseUrl.Text), TxtApiToken.Text, TxtEmail.Text);
+            var jiraClient = GetJiraClient();
 
             if (jiraClient.AddTimeLog(TxtIssueId.Text.ToUpper(), _startTime, _elapsedSeconds, TxtComment.Text))
             {
@@ -125,6 +161,12 @@ namespace JiraTimeLogger
             {
                 LblStatus.Text = "An error occurred while submitting the time log.";
             }
+        }
+
+        private JiraClient GetJiraClient()
+        {
+            var jiraClient = new JiraClient(new Uri(TxtBaseUrl.Text), TxtApiToken.Text, TxtEmail.Text);
+            return jiraClient;
         }
 
         private void TxtIssueId_TextChanged(object sender, EventArgs e)

@@ -39,7 +39,6 @@
             this.label3 = new System.Windows.Forms.Label();
             this.LblElapsedTime = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
-            this.TxtIssueId = new System.Windows.Forms.TextBox();
             this.LblEmail = new System.Windows.Forms.Label();
             this.TxtEmail = new System.Windows.Forms.TextBox();
             this.LblStatus = new System.Windows.Forms.Label();
@@ -47,6 +46,7 @@
             this.label5 = new System.Windows.Forms.Label();
             this.BtnReset = new System.Windows.Forms.Button();
             this.label6 = new System.Windows.Forms.Label();
+            this.TxtIssueId = new System.Windows.Forms.ComboBox();
             this.tableLayoutPanel1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -78,7 +78,6 @@
             this.tableLayoutPanel1.Controls.Add(this.label3, 0, 5);
             this.tableLayoutPanel1.Controls.Add(this.LblElapsedTime, 1, 5);
             this.tableLayoutPanel1.Controls.Add(this.label2, 0, 3);
-            this.tableLayoutPanel1.Controls.Add(this.TxtIssueId, 1, 3);
             this.tableLayoutPanel1.Controls.Add(this.LblEmail, 0, 2);
             this.tableLayoutPanel1.Controls.Add(this.TxtEmail, 1, 2);
             this.tableLayoutPanel1.Controls.Add(this.LblStatus, 1, 6);
@@ -86,6 +85,7 @@
             this.tableLayoutPanel1.Controls.Add(this.label5, 0, 4);
             this.tableLayoutPanel1.Controls.Add(this.BtnReset, 2, 7);
             this.tableLayoutPanel1.Controls.Add(this.label6, 0, 6);
+            this.tableLayoutPanel1.Controls.Add(this.TxtIssueId, 1, 3);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
@@ -118,7 +118,6 @@
             this.TxtComment.Name = "TxtComment";
             this.TxtComment.Size = new System.Drawing.Size(448, 23);
             this.TxtComment.TabIndex = 6;
-            this.TxtComment.TextChanged += new System.EventHandler(this.TxtIssueId_TextChanged);
             // 
             // label1
             // 
@@ -188,16 +187,6 @@
             this.label2.Size = new System.Drawing.Size(98, 17);
             this.label2.TabIndex = 3;
             this.label2.Text = "Issue Key or ID:";
-            // 
-            // TxtIssueId
-            // 
-            this.tableLayoutPanel1.SetColumnSpan(this.TxtIssueId, 2);
-            this.TxtIssueId.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.TxtIssueId.Location = new System.Drawing.Point(128, 102);
-            this.TxtIssueId.Name = "TxtIssueId";
-            this.TxtIssueId.Size = new System.Drawing.Size(448, 23);
-            this.TxtIssueId.TabIndex = 5;
-            this.TxtIssueId.TextChanged += new System.EventHandler(this.TxtIssueId_TextChanged);
             // 
             // LblEmail
             // 
@@ -275,6 +264,18 @@
             this.label6.TabIndex = 15;
             this.label6.Text = "Status:";
             // 
+            // TxtIssueId
+            // 
+            this.tableLayoutPanel1.SetColumnSpan(this.TxtIssueId, 2);
+            this.TxtIssueId.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.TxtIssueId.FormattingEnabled = true;
+            this.TxtIssueId.Location = new System.Drawing.Point(128, 102);
+            this.TxtIssueId.Name = "TxtIssueId";
+            this.TxtIssueId.Size = new System.Drawing.Size(448, 23);
+            this.TxtIssueId.TabIndex = 16;
+            this.TxtIssueId.SelectedValueChanged += new System.EventHandler(this.TxtIssueId_SelectedValueChanged);
+            this.TxtIssueId.TextChanged += new System.EventHandler(this.TxtIssueIdTextChanged);
+            // 
             // MainForm
             // 
             this.AcceptButton = this.BtnSubmit;
@@ -300,7 +301,6 @@
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.TextBox TxtApiToken;
-        private System.Windows.Forms.TextBox TxtIssueId;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Button BtnStartTracking;
@@ -315,6 +315,7 @@
         private System.Windows.Forms.Label label5;
         private System.Windows.Forms.Button BtnReset;
         private System.Windows.Forms.Label label6;
+        private System.Windows.Forms.ComboBox TxtIssueId;
     }
 }
 

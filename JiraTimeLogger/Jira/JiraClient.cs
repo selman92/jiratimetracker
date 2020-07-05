@@ -93,13 +93,14 @@ namespace JiraTimeLogger.Jira
             var request = new RestRequest(new Uri(_baseUrl, IssuesUrl), Method.GET);
 
             request.AddParameter("query", searchKeyword, ParameterType.QueryString);
+            request.AddParameter("showSubTasks", true, ParameterType.QueryString);
 
             var response = restClient.Execute(request);
 
             var rawIssues = JObject.Parse(response.Content);
 
             var issues = rawIssues["sections"][0]["issues"].ToArray().Select(issue =>
-                issue["key"].Value<string>() + " - " + issue["summary"].Value<string>()).ToArray();
+                issue["key"].Value<string>() + " - " + issue["summaryText"].Value<string>()).ToArray();
 
             return issues;
         }

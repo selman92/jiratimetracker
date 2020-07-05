@@ -68,7 +68,7 @@
             this.tableLayoutPanel1.ColumnCount = 3;
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 120F));
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 84F));
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 370F));
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 400F));
             this.tableLayoutPanel1.Controls.Add(this.TxtComment, 1, 4);
             this.tableLayoutPanel1.Controls.Add(this.label1, 0, 0);
             this.tableLayoutPanel1.Controls.Add(this.TxtApiToken, 1, 0);
@@ -99,7 +99,7 @@
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 35F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 29F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 34F));
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(584, 272);
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(614, 272);
             this.tableLayoutPanel1.TabIndex = 1;
             // 
             // TxtComment
@@ -116,7 +116,7 @@
             this.TxtComment.Dock = System.Windows.Forms.DockStyle.Fill;
             this.TxtComment.Location = new System.Drawing.Point(128, 132);
             this.TxtComment.Name = "TxtComment";
-            this.TxtComment.Size = new System.Drawing.Size(448, 23);
+            this.TxtComment.Size = new System.Drawing.Size(478, 23);
             this.TxtComment.TabIndex = 6;
             // 
             // label1
@@ -136,7 +136,7 @@
             this.TxtApiToken.Dock = System.Windows.Forms.DockStyle.Fill;
             this.TxtApiToken.Location = new System.Drawing.Point(128, 8);
             this.TxtApiToken.Name = "TxtApiToken";
-            this.TxtApiToken.Size = new System.Drawing.Size(448, 23);
+            this.TxtApiToken.Size = new System.Drawing.Size(478, 23);
             this.TxtApiToken.TabIndex = 2;
             // 
             // label4
@@ -155,7 +155,7 @@
             this.TxtBaseUrl.Dock = System.Windows.Forms.DockStyle.Fill;
             this.TxtBaseUrl.Location = new System.Drawing.Point(128, 38);
             this.TxtBaseUrl.Name = "TxtBaseUrl";
-            this.TxtBaseUrl.Size = new System.Drawing.Size(448, 23);
+            this.TxtBaseUrl.Size = new System.Drawing.Size(478, 23);
             this.TxtBaseUrl.TabIndex = 3;
             // 
             // label3
@@ -204,7 +204,7 @@
             this.TxtEmail.Dock = System.Windows.Forms.DockStyle.Fill;
             this.TxtEmail.Location = new System.Drawing.Point(128, 68);
             this.TxtEmail.Name = "TxtEmail";
-            this.TxtEmail.Size = new System.Drawing.Size(448, 23);
+            this.TxtEmail.Size = new System.Drawing.Size(478, 23);
             this.TxtEmail.TabIndex = 4;
             // 
             // LblStatus
@@ -215,7 +215,7 @@
             this.LblStatus.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
             this.LblStatus.Location = new System.Drawing.Point(128, 198);
             this.LblStatus.Name = "LblStatus";
-            this.LblStatus.Size = new System.Drawing.Size(448, 29);
+            this.LblStatus.Size = new System.Drawing.Size(478, 29);
             this.LblStatus.TabIndex = 12;
             // 
             // BtnSubmit
@@ -271,7 +271,7 @@
             this.TxtIssueId.FormattingEnabled = true;
             this.TxtIssueId.Location = new System.Drawing.Point(128, 102);
             this.TxtIssueId.Name = "TxtIssueId";
-            this.TxtIssueId.Size = new System.Drawing.Size(448, 23);
+            this.TxtIssueId.Size = new System.Drawing.Size(478, 23);
             this.TxtIssueId.TabIndex = 16;
             this.TxtIssueId.SelectedValueChanged += new System.EventHandler(this.TxtIssueId_SelectedValueChanged);
             this.TxtIssueId.TextChanged += new System.EventHandler(this.TxtIssueIdTextChanged);
@@ -281,11 +281,11 @@
             this.AcceptButton = this.BtnSubmit;
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(584, 272);
+            this.ClientSize = new System.Drawing.Size(614, 272);
             this.Controls.Add(this.tableLayoutPanel1);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
-            this.MaximumSize = new System.Drawing.Size(600, 311);
+            this.MaximumSize = new System.Drawing.Size(630, 311);
             this.Name = "MainForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Jira Time Tracker";

@@ -153,7 +153,7 @@ namespace JiraTimeLogger
             var issueId = GetIssueId(TxtIssueId.Text);
             if (jiraClient.AddTimeLog(issueId, _startTime, _elapsedSeconds, TxtComment.Text))
             {
-                LblStatus.Text = $"Time log successfully saved for the issue {TxtIssueId.Text}. Elapsed time: {Math.Max(_elapsedSeconds / 60, 1)} minutes.";
+                LblStatus.Text = $"Time log successfully saved for the issue {GetIssueId(TxtIssueId.Text)}. Elapsed time: {Math.Max(_elapsedSeconds / 60, 1)} minutes.";
                 LblElapsedTime.Text = DefaultElapsedTime;
                 TxtComment.Text = string.Empty;
             }

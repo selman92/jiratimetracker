@@ -1,132 +1,140 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
 using System.Net;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using RestSharp;
-using RestSharp.Authenticators;
 
 namespace JiraTimeLogger.Jira
 {
-    public class JiraClient
-    {
-        private const string RestApiBaseUrl = "/rest/api/3/";
+	public class JiraClient
+	{
+		private const string WorklogsEndpoint = "/worklogs";
 
-        private readonly string WorklogUrl = $"{RestApiBaseUrl}issue/{{0}}/worklog";
-        private readonly  string IssuesUrl = $"{RestApiBaseUrl}issue/picker";
-        private readonly string _apiToken;
-        private readonly Uri _baseUrl;
-        private readonly string _email;
+		private const string WorkAttributeKey = "_Type_";
 
-        private const string DateFormat = "yyyy-MM-ddTHH:mm:ss\\.fff";
+		private readonly string _apiToken;
 
-        private const string CommentJsonFormat = @", ""comment"": {
-    ""type"": ""doc"",
-    ""version"": 1,
-    ""content"": [
-      {
-        ""type"": ""paragraph"",
-        ""content"": [
-          {
-            ""text"": ""#comment"",
-            ""type"": ""text""
-          }
-        ]
-      }
-    ]
-  } ";
+		private readonly Uri _baseUrl;
+		private readonly string WorkAttributesEndpoint = "/work-attributes";
 
-        public JiraClient(Uri baseUrl, string apiToken, string email)
-        {
-            _apiToken = apiToken;
-            _baseUrl = baseUrl;
-            _email = email;
-        }
+		public JiraClient(Uri baseUrl, string apiToken)
+		{
+			_apiToken = apiToken;
+			_baseUrl = baseUrl;
+		}
 
-        public bool AddTimeLog(string issueId, DateTime startTime, int elapsedSeconds, string comment = null)
-        {
-            var restClient = GetRestClient();
+		public bool AddTimeLog(string issueId, string accountId, DateTime startTime, int elapsedSeconds,
+			string workType, string comment = null)
+		{
+			var restClient = GetRestClient();
 
-            var request = new RestRequest(new Uri(_baseUrl, string.Format(WorklogUrl, issueId)), Method.POST);
+			var request = new RestRequest(new Uri(string.Concat(_baseUrl.AbsoluteUri.Trim('/'), WorklogsEndpoint)),
+				Method.POST);
 
-            request.JsonSerializer = new JsonNetSerializer();
+			request.JsonSerializer = new JsonNetSerializer();
 
-            var elapsedTime = ConvertTime(elapsedSeconds);
-            var addLogModel = new AddWorkLogModel
-            {
-                ElapsedTime = elapsedTime,
-                StartedTime = startTime.ToString(DateFormat, CultureInfo.InvariantCulture) + "+0000",
-            };
+			var addLogModel = new AddWorkLogModel
+			{
+				IssueId = issueId,
+				ElapsedTimeInSeconds = elapsedSeconds,
+				StartDate = startTime.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+				StartTime = startTime.ToString("HH:mm:ss", CultureInfo.InvariantCulture),
+				Comment = comment ?? string.Empty,
+				AccountId = accountId,
+				Attributes = new[]
+				{
+					new WorkAttribute
+					{
+						Key = WorkAttributeKey,
+						Value = workType
+					}
+				}
+			};
 
-            var serializedModel = JsonConvert.SerializeObject(addLogModel);
+			AddAuthHeader(request);
 
-            if (!string.IsNullOrEmpty(comment))
-            {
-                // An ugly hack to add comment by modifying raw JSON
-                // Because I'm too lazy to declare model class for 3 nested levels of json for one piece of text.
-                serializedModel = AddComment(serializedModel, comment);
-            }
+			request.AddJsonBody(addLogModel, "application/json");
 
-            var deserializedObj = JsonConvert.DeserializeObject<AddWorkLogModel>(serializedModel);
+			try
+			{
+				var response = restClient.Execute(request);
 
-            request.AddJsonBody(deserializedObj, "application/json");
+				return response.StatusCode == HttpStatusCode.OK;
+			}
+			catch (Exception e)
+			{
+				Console.WriteLine(e);
+			}
 
-            try
-            {
-                var response = restClient.Execute(request);
+			return false;
+		}
 
-                return response.StatusCode == HttpStatusCode.Created;
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-            }
+		private IRestClient GetRestClient()
+		{
+			var restClient = new RestClient(_baseUrl);
 
-            return false;
-        }
+			return restClient;
+		}
 
-        public string[] GetIssues(string searchKeyword)
-        {
-            var restClient = GetRestClient();
+		public Dictionary<string, string> GetWorkTypes()
+		{
+			var restClient = GetRestClient();
 
-            var request = new RestRequest(new Uri(_baseUrl, IssuesUrl), Method.GET);
+			var request = new RestRequest(new Uri(_baseUrl.AbsoluteUri.TrimEnd('/') + WorkAttributesEndpoint),
+				Method.GET);
 
-            request.AddParameter("query", searchKeyword, ParameterType.QueryString);
-            request.AddParameter("showSubTasks", true, ParameterType.QueryString);
+			AddAuthHeader(request);
 
-            var response = restClient.Execute(request);
+			try
+			{
+				var response = restClient.Execute(request);
 
-            var rawIssues = JObject.Parse(response.Content);
+				var rawResponse = JObject.Parse(response.Content);
 
-            var issues = rawIssues["sections"][0]["issues"].ToArray().Select(issue =>
-                issue["key"].Value<string>() + " - " + issue["summaryText"].Value<string>()).ToArray();
+				var workTypeNames = rawResponse["results"][0]["names"].ToObject<JObject>();
 
-            return issues;
-        }
+				var workTypes = new Dictionary<string, string>();
+				foreach (var prop in workTypeNames.Properties()) workTypes.Add(prop.Name, prop.Value.Value<string>());
 
-        private IRestClient GetRestClient()
-        {
-            var restClient = new RestClient(_baseUrl);
-            restClient.Authenticator = new HttpBasicAuthenticator(_email, _apiToken);
+				return workTypes;
+			}
+			catch (Exception e)
+			{
+				return null;
+			}
+		}
 
-            return restClient;
-        }
+		private void AddAuthHeader(RestRequest request)
+		{
+			request.AddHeader("Authorization", $"Bearer {_apiToken}");
+		}
 
-        private string AddComment(string serializedModel, string comment)
-        {
-            var lastBraceIndex = serializedModel.LastIndexOf('}');
+		public string GetAccountId()
+		{
+			var restClient = GetRestClient();
 
-            var commentJson = CommentJsonFormat.Replace("#comment", comment);
+			var request = new RestRequest(new Uri(_baseUrl.AbsoluteUri.TrimEnd('/') + WorklogsEndpoint), Method.GET);
 
-            serializedModel = serializedModel.Insert(lastBraceIndex, commentJson);
+			request.Parameters.Add(new Parameter("limit", "1", ParameterType.QueryString));
 
-            return serializedModel;
-        }
+			AddAuthHeader(request);
 
-        private string ConvertTime(in int elapsedSeconds)
-        {
-            return Math.Max(elapsedSeconds / 60, 1) + "m";
-        }
-    }
+			try
+			{
+				var response = restClient.Execute(request);
+
+				var rawResponse = JObject.Parse(response.Content);
+
+				var accountId = rawResponse["results"][0]["author"]["accountId"];
+
+				return accountId.Value<string>();
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine(ex);
+				return null;
+			}
+		}
+	}
 }

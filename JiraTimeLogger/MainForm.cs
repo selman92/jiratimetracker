@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Security.Policy;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -14,14 +15,14 @@ namespace JiraTimeLogger
 {
     public partial class MainForm : Form
     {
-
         private readonly Timer _trackingTimer;
-        private readonly Timer _issueTextChangeTimer;
         private int _elapsedSeconds = 0;
         private bool _isTrackingStarted = false;
         private DateTime _startTime;
         private const string SettingsFileName = "settings.json";
         private const string DefaultElapsedTime = "00:00:00";
+        private const string TempoApiUrl = "https://api.tempo.io/core/3/";
+        private string _accountId;
 
         private readonly Regex _issueIdRegex =
             new Regex("[a-z0-9]*-\\d*", RegexOptions.Compiled | RegexOptions.IgnoreCase);
@@ -33,40 +34,47 @@ namespace JiraTimeLogger
             _trackingTimer = new Timer {Interval = 1000};
             _trackingTimer.Tick += TrackingTimerOnTick;
 
-            _issueTextChangeTimer = new Timer {Interval = 500};
-            _issueTextChangeTimer.Tick += IssueTextChangeTimerOnTick;
-
             LoadSettings();
 
+            TxtApiToken.TextChanged += TxtApiTokenOnTextChanged;
             TxtApiToken.Validated += OnSettingsChange;
-            TxtBaseUrl.Validated += OnSettingsChange;
-            TxtEmail.Validated += OnSettingsChange;
+
+            PopulateWorkTypes();
+            UpdateAccountId();
         }
 
-        private async void IssueTextChangeTimerOnTick(object sender, EventArgs e)
+        private void UpdateAccountId()
         {
-            var issue = TxtIssueId.Text;
+	        if (!string.IsNullOrEmpty(TxtApiToken.Text))
+	        {
+		        var client = GetJiraClient();
 
-            if (!string.IsNullOrEmpty(issue))
-            {
-                var jiraClient = GetJiraClient();
+		       _accountId = client.GetAccountId();
+	        }
+        }
 
-                var issues = await Task.Run(() => jiraClient.GetIssues(issue));
+        private void TxtApiTokenOnTextChanged(object? sender, EventArgs e)
+        {
+	        PopulateWorkTypes();
+	        UpdateAccountId();
+        }
 
-                if (issues.Length > 0)
-                {
-                    TxtIssueId.DataSource = new[] {issue}.Concat(issues).ToArray();
+        private void PopulateWorkTypes()
+        {
+	        if (!string.IsNullOrEmpty(TxtApiToken.Text))
+	        {
+		        var client = GetJiraClient();
 
-                    TxtIssueId.Refresh();
-                    TxtIssueId.DroppedDown = true;
-                    TxtIssueId.Text = issue;
+		        var workTypes = client.GetWorkTypes();
+
+		        if (workTypes != null)
+		        {
+			        CmbWorktypes.DataSource = workTypes.ToList();
+			        CmbWorktypes.DisplayMember = "Value";
+			        CmbWorktypes.ValueMember = "Key";
                 }
-               
-                _issueTextChangeTimer.Stop();
-                _issueTextChangeTimer.Enabled = false;
             }
         }
-
 
         private void TrackingTimerOnTick(object sender, EventArgs e)
         {
@@ -83,7 +91,7 @@ namespace JiraTimeLogger
 
         private void SaveSettings()
         {
-            var settingsObj = new {ApiToken = TxtApiToken.Text, BaseUrl = TxtBaseUrl.Text, Email = TxtEmail.Text};
+            var settingsObj = new {ApiToken = TxtApiToken.Text };
 
             var serialized = JsonConvert.SerializeObject(settingsObj);
 
@@ -103,8 +111,6 @@ namespace JiraTimeLogger
                 var settingsObj = JObject.Parse(File.ReadAllText(SettingsFileName));
 
                 TxtApiToken.Text = settingsObj["ApiToken"].ToString();
-                TxtBaseUrl.Text = settingsObj["BaseUrl"].ToString();
-                TxtEmail.Text = settingsObj["Email"].ToString();
             }
             catch (Exception e)
             {
@@ -117,7 +123,7 @@ namespace JiraTimeLogger
             if (!_isTrackingStarted)
             {
                 _isTrackingStarted = true;
-                _startTime = DateTime.UtcNow;
+                _startTime = DateTime.Now;
                 BtnStartTracking.Text = "Stop Tracking";
                 ResetAndStartTimer();
                 BtnSubmit.Enabled = false;
@@ -134,7 +140,7 @@ namespace JiraTimeLogger
 
         private bool ValidateForm()
         {
-            var values = new[] {TxtApiToken.Text, TxtBaseUrl.Text, TxtEmail.Text, TxtIssueId.Text};
+            var values = new[] {TxtApiToken.Text, TxtIssueId.Text};
 
             return !values.Any(string.IsNullOrEmpty);
         }
@@ -148,19 +154,23 @@ namespace JiraTimeLogger
 
         private void BtnSubmit_Click(object sender, EventArgs e)
         {
-            var jiraClient = GetJiraClient();
+	        var jiraClient = GetJiraClient();
 
-            var issueId = GetIssueId(TxtIssueId.Text);
-            if (jiraClient.AddTimeLog(issueId, _startTime, _elapsedSeconds, TxtComment.Text))
-            {
-                LblStatus.Text = $"Time log successfully saved for the issue {GetIssueId(TxtIssueId.Text)}. Elapsed time: {Math.Max(_elapsedSeconds / 60, 1)} minutes.";
-                LblElapsedTime.Text = DefaultElapsedTime;
-                TxtComment.Text = string.Empty;
-            }
-            else
-            {
-                LblStatus.Text = "An error occurred while submitting the time log.";
-            }
+	        var issueId = GetIssueId(TxtIssueId.Text);
+
+	        if (jiraClient.AddTimeLog(issueId, _accountId, _startTime, _elapsedSeconds,
+		        CmbWorktypes.SelectedValue.ToString(),
+		        TxtComment.Text))
+	        {
+		        LblStatus.Text =
+			        $"Time log successfully saved for the issue {GetIssueId(TxtIssueId.Text)}. Elapsed time: {Math.Max(_elapsedSeconds / 60, 1)} minutes.";
+		        LblElapsedTime.Text = DefaultElapsedTime;
+		        TxtComment.Text = string.Empty;
+	        }
+	        else
+	        {
+		        LblStatus.Text = "An error occurred while submitting the time log.";
+	        }
         }
 
         private string GetIssueId(string issueText)
@@ -176,7 +186,7 @@ namespace JiraTimeLogger
 
         private JiraClient GetJiraClient()
         {
-            var jiraClient = new JiraClient(new Uri(TxtBaseUrl.Text), TxtApiToken.Text, TxtEmail.Text);
+            var jiraClient = new JiraClient(new Uri(TempoApiUrl), TxtApiToken.Text);
             return jiraClient;
         }
 
@@ -185,37 +195,6 @@ namespace JiraTimeLogger
             _elapsedSeconds = 0;
             LblElapsedTime.Text = DefaultElapsedTime;
             _startTime = DateTime.UtcNow;
-        }
-
-        private void TxtIssueId_SelectedValueChanged(object sender, EventArgs e)
-        {
-            _issueTextChangeTimer.Stop();
-
-            TxtIssueId.SelectionLength = 0;
-        }
-
-        private void TxtIssueIdTextChanged(object sender, EventArgs e)
-        {
-            BtnSubmit.Enabled = !string.IsNullOrEmpty(TxtIssueId.Text);
-
-            if (_issueTextChangeTimer.Enabled)
-            {
-                _issueTextChangeTimer.Stop();
-
-                _issueTextChangeTimer.Start();
-            }
-            else
-            {
-                _issueTextChangeTimer.Enabled = true;
-                _issueTextChangeTimer.Start();
-            }
-
-            if (string.IsNullOrEmpty(TxtIssueId.Text))
-            {
-                TxtIssueId.DataSource = Array.Empty<string>();
-                TxtIssueId.Refresh();
-                TxtIssueId.DroppedDown = false;
-            }
         }
     }
 }

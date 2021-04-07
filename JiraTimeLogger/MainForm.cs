@@ -1,11 +1,9 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
-using System.Security.Policy;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using System.Windows.Forms.VisualStyles;
 using JiraTimeLogger.Jira;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -53,7 +51,7 @@ namespace JiraTimeLogger
             }
         }
 
-        private void TxtApiTokenOnTextChanged(object? sender, EventArgs e)
+        private void TxtApiTokenOnTextChanged(object sender, EventArgs e)
         {
 	        PopulateWorkTypes();
 	        UpdateAccountId();

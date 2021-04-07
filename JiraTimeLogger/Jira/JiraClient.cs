@@ -62,6 +62,8 @@ namespace JiraTimeLogger.Jira
 
 			request.AddJsonBody(addLogModel, "application/json");
 
+            request.Timeout = 120000;
+
 			try
 			{
 				var response = restClient.Execute(request);

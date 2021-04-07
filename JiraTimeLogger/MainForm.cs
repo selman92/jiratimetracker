@@ -43,14 +43,14 @@ namespace JiraTimeLogger
             UpdateAccountId();
         }
 
-        private void UpdateAccountId()
+        private async void UpdateAccountId()
         {
 	        if (!string.IsNullOrEmpty(TxtApiToken.Text))
 	        {
 		        var client = GetJiraClient();
 
-		       _accountId = client.GetAccountId();
-	        }
+                _accountId = await Task.Run(() => client.GetAccountId());
+            }
         }
 
         private void TxtApiTokenOnTextChanged(object? sender, EventArgs e)
@@ -59,13 +59,13 @@ namespace JiraTimeLogger
 	        UpdateAccountId();
         }
 
-        private void PopulateWorkTypes()
+        private async void PopulateWorkTypes()
         {
 	        if (!string.IsNullOrEmpty(TxtApiToken.Text))
 	        {
 		        var client = GetJiraClient();
 
-		        var workTypes = client.GetWorkTypes();
+		        var workTypes = await Task.Run(() =>  client.GetWorkTypes());
 
 		        if (workTypes != null)
 		        {
@@ -152,15 +152,20 @@ namespace JiraTimeLogger
             _trackingTimer.Start();
         }
 
-        private void BtnSubmit_Click(object sender, EventArgs e)
+        private async void BtnSubmit_Click(object sender, EventArgs e)
         {
 	        var jiraClient = GetJiraClient();
 
 	        var issueId = GetIssueId(TxtIssueId.Text);
 
-	        if (jiraClient.AddTimeLog(issueId, _accountId, _startTime, _elapsedSeconds,
-		        CmbWorktypes.SelectedValue.ToString(),
-		        TxtComment.Text))
+            var comment = TxtComment.Text;
+            var workType = CmbWorktypes.SelectedValue.ToString();
+
+            var success = await Task.Run(() => jiraClient.AddTimeLog(issueId, _accountId, _startTime, _elapsedSeconds,
+                workType,
+                comment));
+
+	        if (success)
 	        {
 		        LblStatus.Text =
 			        $"Time log successfully saved for the issue {GetIssueId(TxtIssueId.Text)}. Elapsed time: {Math.Max(_elapsedSeconds / 60, 1)} minutes.";
@@ -169,7 +174,7 @@ namespace JiraTimeLogger
 	        }
 	        else
 	        {
-		        LblStatus.Text = "An error occurred while submitting the time log.";
+		        LblStatus.Text = "An error occurred while submitting the time log. Please check logs for details.";
 	        }
         }
 

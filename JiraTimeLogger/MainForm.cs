@@ -152,7 +152,8 @@ namespace JiraTimeLogger
 
         private async void BtnSubmit_Click(object sender, EventArgs e)
         {
-	        var jiraClient = GetJiraClient();
+            LblStatus.Text = "Saving the time log...";
+            var jiraClient = GetJiraClient();
 
 	        var issueId = GetIssueId(TxtIssueId.Text);
 

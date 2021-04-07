@@ -168,7 +168,6 @@
             // 
             this.BtnSubmit.Cursor = System.Windows.Forms.Cursors.Hand;
             this.BtnSubmit.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.BtnSubmit.Enabled = false;
             this.BtnSubmit.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
             this.BtnSubmit.Location = new System.Drawing.Point(128, 188);
             this.BtnSubmit.Name = "BtnSubmit";

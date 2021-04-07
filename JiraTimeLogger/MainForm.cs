@@ -124,7 +124,6 @@ namespace JiraTimeLogger
                 _startTime = DateTime.Now;
                 BtnStartTracking.Text = "Stop Tracking";
                 ResetAndStartTimer();
-                BtnSubmit.Enabled = false;
             }
             else
             {
@@ -132,7 +131,6 @@ namespace JiraTimeLogger
                 BtnStartTracking.Text = "Start Tracking";
                 _trackingTimer.Stop();
                 _trackingTimer.Enabled = false;
-                BtnSubmit.Enabled = ValidateForm();
             }
         }
 
@@ -152,6 +150,12 @@ namespace JiraTimeLogger
 
         private async void BtnSubmit_Click(object sender, EventArgs e)
         {
+            if (!ValidateForm())
+            {
+                LblStatus.Text = "Please fill in the required fields and try again.";
+                return;
+            }
+
             LblStatus.Text = "Saving the time log...";
             var jiraClient = GetJiraClient();
 

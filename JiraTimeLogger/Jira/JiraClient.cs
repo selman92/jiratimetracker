@@ -60,6 +60,7 @@ namespace JiraTimeLogger.Jira
 			};
 
 			AddAuthHeader(request);
+            request.Timeout = RequestTimeout;
 
 			request.AddJsonBody(addLogModel, "application/json");
 
@@ -97,6 +98,7 @@ namespace JiraTimeLogger.Jira
 			var request = new RestRequest(new Uri(_baseUrl.AbsoluteUri.TrimEnd('/') + WorkAttributesEndpoint),
 				Method.GET);
 
+            request.Timeout = RequestTimeout;
 			AddAuthHeader(request);
 
 			try

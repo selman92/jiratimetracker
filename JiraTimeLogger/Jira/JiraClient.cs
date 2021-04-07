@@ -16,6 +16,7 @@ namespace JiraTimeLogger.Jira
 		private const string WorkAttributeKey = "_Type_";
         private const string DateFormat = "yyyy-MM-dd";
         private const string TimeFormat = "HH:mm:ss";
+        private const int RequestTimeout = 120000;
 
         private readonly string _apiToken;
 
@@ -62,8 +63,6 @@ namespace JiraTimeLogger.Jira
 
 			request.AddJsonBody(addLogModel, "application/json");
 
-            request.Timeout = 120000;
-
 			try
 			{
 				var response = restClient.Execute(request);
@@ -86,7 +85,7 @@ namespace JiraTimeLogger.Jira
 
 		private IRestClient GetRestClient()
 		{
-			var restClient = new RestClient(_baseUrl);
+			var restClient = new RestClient(_baseUrl) {Timeout = RequestTimeout};
 
 			return restClient;
 		}

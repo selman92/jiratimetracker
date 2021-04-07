@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Net;
 using Newtonsoft.Json.Linq;
+using NLog;
+using NLog.Fluent;
 using RestSharp;
 
 namespace JiraTimeLogger.Jira
@@ -12,11 +14,15 @@ namespace JiraTimeLogger.Jira
 		private const string WorklogsEndpoint = "/worklogs";
 
 		private const string WorkAttributeKey = "_Type_";
+        private const string DateFormat = "yyyy-MM-dd";
+        private const string TimeFormat = "HH:mm:ss";
 
-		private readonly string _apiToken;
+        private readonly string _apiToken;
 
 		private readonly Uri _baseUrl;
 		private readonly string WorkAttributesEndpoint = "/work-attributes";
+
+        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
 		public JiraClient(Uri baseUrl, string apiToken)
 		{
@@ -38,8 +44,8 @@ namespace JiraTimeLogger.Jira
 			{
 				IssueId = issueId,
 				ElapsedTimeInSeconds = elapsedSeconds,
-				StartDate = startTime.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
-				StartTime = startTime.ToString("HH:mm:ss", CultureInfo.InvariantCulture),
+				StartDate = startTime.ToString(DateFormat, CultureInfo.InvariantCulture),
+				StartTime = startTime.ToString(TimeFormat, CultureInfo.InvariantCulture),
 				Comment = comment ?? string.Empty,
 				AccountId = accountId,
 				Attributes = new[]
@@ -60,11 +66,17 @@ namespace JiraTimeLogger.Jira
 			{
 				var response = restClient.Execute(request);
 
-				return response.StatusCode == HttpStatusCode.OK;
-			}
-			catch (Exception e)
+				if(response.StatusCode == HttpStatusCode.OK)
+                {
+                    return true;
+                }
+
+
+                Logger.Log(LogLevel.Error, $"An error occurred while saving time log, details: {response.Content}");
+            }
+			catch (Exception ex)
 			{
-				Console.WriteLine(e);
+                Logger.Log(LogLevel.Error, ex);
 			}
 
 			return false;
@@ -99,8 +111,9 @@ namespace JiraTimeLogger.Jira
 
 				return workTypes;
 			}
-			catch (Exception e)
+			catch (Exception ex)
 			{
+                Logger.Log(LogLevel.Error, ex);
 				return null;
 			}
 		}
@@ -132,7 +145,7 @@ namespace JiraTimeLogger.Jira
 			}
 			catch (Exception ex)
 			{
-				Console.WriteLine(ex);
+				Logger.Log(LogLevel.Error, ex);
 				return null;
 			}
 		}

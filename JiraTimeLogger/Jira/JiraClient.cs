@@ -44,7 +44,7 @@ namespace JiraTimeLogger.Jira
 			var addLogModel = new AddWorkLogModel
 			{
 				IssueId = issueId,
-				ElapsedTimeInSeconds = elapsedSeconds,
+				ElapsedTimeInSeconds = Math.Max(elapsedSeconds, 60),
 				StartDate = startTime.ToString(DateFormat, CultureInfo.InvariantCulture),
 				StartTime = startTime.ToString(TimeFormat, CultureInfo.InvariantCulture),
 				Comment = comment ?? string.Empty,
